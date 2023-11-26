@@ -1,0 +1,68 @@
+[gd_scene load_steps=5 format=3 uid="uid://cwrf108aiftk3"]
+
+[ext_resource type="Texture2D" uid="uid://bnqu5b8685h7t" path="res://player1.png" id="1_psrib"]
+[ext_resource type="Texture2D" uid="uid://dm7hk2o6o268b" path="res://playerblock64.png" id="2_h5px1"]
+
+[sub_resource type="GDScript" id="GDScript_vlu3n"]
+script/source = "extends CharacterBody2D
+
+var player_speed = 400
+var dash_speed = 2.5 * player_speed
+var is_dashing = false
+var dash_duration = 0.2  # czas trwania dasha w sekundach
+var dash_timer = 0.0
+
+var player : Texture
+var player_block : Texture
+
+
+func _process(delta):
+	if Input.is_action_pressed(\"right_click\"):
+		$player_block.visible = true  # Aktywuj Sprite gracza w bloku
+		$player.visible = false  # Ukryj Sprite gracza bazowego
+	else:
+		$player_block.visible = false  # Ukryj Sprite gracza w bloku
+		$player.visible = true  # Aktywuj Sprite gracza bazowego
+	
+	if is_dashing:
+		dash_timer -= delta
+		if dash_timer <= 0:
+			is_dashing = false
+			player_speed = 400  # przywróć normalną prędkość gracza
+	
+	var input_direction = Input.get_vector(\"left\", \"right\", \"up\", \"down\")
+	
+	if is_dashing:
+		velocity = velocity.normalized() * dash_speed
+	else:
+		velocity = input_direction * player_speed
+	
+	rotation = get_global_mouse_position().angle_to_point(position)
+	move_and_slide()
+	
+	if Input.is_action_just_pressed(\"space\") and not is_dashing:
+		is_dashing = true
+		dash_timer = dash_duration
+		player_speed = dash_speed  # ustaw prędkość gracza na prędkość dasha
+"
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_77fbo"]
+radius = 27.0185
+
+[node name="Player" type="CharacterBody2D"]
+script = SubResource("GDScript_vlu3n")
+
+[node name="player" type="Sprite2D" parent="."]
+position = Vector2(5, 2)
+rotation = -1.5708
+scale = Vector2(2, 2)
+texture = ExtResource("1_psrib")
+
+[node name="player_block" type="Sprite2D" parent="."]
+position = Vector2(7.62939e-06, 7.62939e-06)
+rotation = -1.5708
+scale = Vector2(2, 1.919)
+texture = ExtResource("2_h5px1")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_77fbo")
