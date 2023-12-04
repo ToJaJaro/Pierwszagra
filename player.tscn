@@ -1,68 +1,215 @@
-[gd_scene load_steps=5 format=3 uid="uid://cwrf108aiftk3"]
+[gd_scene load_steps=21 format=3 uid="uid://cwrf108aiftk3"]
 
-[ext_resource type="Texture2D" uid="uid://bnqu5b8685h7t" path="res://player1.png" id="1_psrib"]
-[ext_resource type="Texture2D" uid="uid://dm7hk2o6o268b" path="res://playerblock64.png" id="2_h5px1"]
+[ext_resource type="Texture2D" uid="uid://c5xgpnbujfqr7" path="res://final_animation.png" id="3_6pkea"]
+[ext_resource type="PackedScene" uid="uid://rdngc8tl1ma7" path="res://player/player.tscn" id="3_bkuui"]
 
 [sub_resource type="GDScript" id="GDScript_vlu3n"]
 script/source = "extends CharacterBody2D
-
+#movement
 var player_speed = 400
 var dash_speed = 2.5 * player_speed
 var is_dashing = false
-var dash_duration = 0.2  # czas trwania dasha w sekundach
-var dash_timer = 0.0
+#var is_attacking = false
+var is_blocking = false
+#var is_walking = false
+#textury 
+#var player : Texture
+#var player_block : Texture
+#statystyki
+#var hp = 100
+#var strenght = 1
+#var posture = 100
+@onready var animation_tree = $AnimationTree
 
-var player : Texture
-var player_block : Texture
+func _ready():
+	animation_tree.active = true
 
-
-func _process(delta):
-	if Input.is_action_pressed(\"right_click\"):
-		$player_block.visible = true  # Aktywuj Sprite gracza w bloku
-		$player.visible = false  # Ukryj Sprite gracza bazowego
-	else:
-		$player_block.visible = false  # Ukryj Sprite gracza w bloku
-		$player.visible = true  # Aktywuj Sprite gracza bazowego
+func _physics_process(_delta):
 	
-	if is_dashing:
-		dash_timer -= delta
-		if dash_timer <= 0:
-			is_dashing = false
-			player_speed = 400  # przywróć normalną prędkość gracza
+	if Input.is_action_pressed(\"right_click\"):
+		animation_tree[\"parameters/conditions/is_blocking\"] = true
+		animation_tree[\"parameters/conditions/is_attacking\"] = false
+		animation_tree[\"parameters/conditions/is_idle\"] = false
+	elif Input.is_action_pressed(\"left_click\"):
+		animation_tree[\"parameters/conditions/is_attacking\"] = true
+		animation_tree[\"parameters/conditions/is_blocking\"] = false
+		animation_tree[\"parameters/conditions/is_idle\"] = false
+	else:
+		animation_tree[\"parameters/conditions/is_idle\"] = true
+		animation_tree[\"parameters/conditions/is_blocking\"] = false
+		animation_tree[\"parameters/conditions/is_attacking\"] = false
+	
 	
 	var input_direction = Input.get_vector(\"left\", \"right\", \"up\", \"down\")
 	
 	if is_dashing:
 		velocity = velocity.normalized() * dash_speed
 	else:
-		velocity = input_direction * player_speed
+		velocity = input_direction * player_speed 
+		
 	
 	rotation = get_global_mouse_position().angle_to_point(position)
 	move_and_slide()
 	
 	if Input.is_action_just_pressed(\"space\") and not is_dashing:
+		$Dash_timer.start()
 		is_dashing = true
-		dash_timer = dash_duration
-		player_speed = dash_speed  # ustaw prędkość gracza na prędkość dasha
+
+func _on_dash_timer_timeout():
+	player_speed = 400
+	is_dashing = false 
 "
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_77fbo"]
 radius = 27.0185
 
+[sub_resource type="Animation" id="Animation_4vnd7"]
+resource_name = "Idle"
+length = 0.5
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("animationsprite:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [0]
+}
+
+[sub_resource type="Animation" id="Animation_q1spa"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("animationsprite:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [0]
+}
+
+[sub_resource type="Animation" id="Animation_3e3e5"]
+resource_name = "attack"
+step = 0.5
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("animationsprite:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.5),
+"transitions": PackedFloat32Array(1, 1),
+"update": 1,
+"values": [1, 2]
+}
+
+[sub_resource type="Animation" id="Animation_04pxf"]
+resource_name = "block"
+length = 0.5
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("animationsprite:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [3]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_k75us"]
+_data = {
+"Idle": SubResource("Animation_4vnd7"),
+"RESET": SubResource("Animation_q1spa"),
+"attack": SubResource("Animation_3e3e5"),
+"block": SubResource("Animation_04pxf")
+}
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_s1goc"]
+animation = &"Idle"
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_ccxji"]
+animation = &"attack"
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_8gods"]
+animation = &"block"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_tkeyw"]
+advance_mode = 2
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_jwqra"]
+advance_mode = 2
+advance_condition = &"is_blocking"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_32vi4"]
+advance_mode = 2
+advance_condition = &"is_attacking"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_4fro1"]
+advance_mode = 2
+advance_condition = &"is_idle"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_cyo8k"]
+advance_mode = 2
+advance_condition = &"is_idle"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_2tbei"]
+advance_mode = 2
+advance_condition = &"is_attacking"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_p645h"]
+advance_mode = 2
+advance_condition = &"is_blocking"
+
+[sub_resource type="AnimationNodeStateMachine" id="AnimationNodeStateMachine_jsp06"]
+states/Idle/node = SubResource("AnimationNodeAnimation_s1goc")
+states/Idle/position = Vector2(402, 129)
+states/Start/position = Vector2(219, 94)
+states/attack/node = SubResource("AnimationNodeAnimation_ccxji")
+states/attack/position = Vector2(697, 129)
+states/block/node = SubResource("AnimationNodeAnimation_8gods")
+states/block/position = Vector2(549, 35)
+transitions = ["Start", "Idle", SubResource("AnimationNodeStateMachineTransition_tkeyw"), "Idle", "block", SubResource("AnimationNodeStateMachineTransition_jwqra"), "block", "attack", SubResource("AnimationNodeStateMachineTransition_32vi4"), "attack", "Idle", SubResource("AnimationNodeStateMachineTransition_4fro1"), "block", "Idle", SubResource("AnimationNodeStateMachineTransition_cyo8k"), "Idle", "attack", SubResource("AnimationNodeStateMachineTransition_2tbei"), "attack", "block", SubResource("AnimationNodeStateMachineTransition_p645h")]
+
 [node name="Player" type="CharacterBody2D"]
 script = SubResource("GDScript_vlu3n")
 
-[node name="player" type="Sprite2D" parent="."]
-position = Vector2(5, 2)
-rotation = -1.5708
-scale = Vector2(2, 2)
-texture = ExtResource("1_psrib")
-
-[node name="player_block" type="Sprite2D" parent="."]
-position = Vector2(7.62939e-06, 7.62939e-06)
-rotation = -1.5708
-scale = Vector2(2, 1.919)
-texture = ExtResource("2_h5px1")
+[node name="player" parent="." instance=ExtResource("3_bkuui")]
+visible = false
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_77fbo")
+
+[node name="Dash_timer" type="Timer" parent="."]
+wait_time = 0.2
+
+[node name="animationsprite" type="Sprite2D" parent="."]
+position = Vector2(-17, 0)
+rotation = -1.5708
+scale = Vector2(2, 2)
+texture = ExtResource("3_6pkea")
+hframes = 4
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+"": SubResource("AnimationLibrary_k75us")
+}
+
+[node name="AnimationTree" type="AnimationTree" parent="."]
+tree_root = SubResource("AnimationNodeStateMachine_jsp06")
+anim_player = NodePath("../AnimationPlayer")
+advance_expression_base_node = NodePath("../AnimationPlayer")
+parameters/conditions/is_attacking = false
+parameters/conditions/is_blocking = false
+parameters/conditions/is_idle = false
+
+[connection signal="timeout" from="Dash_timer" to="." method="_on_dash_timer_timeout"]

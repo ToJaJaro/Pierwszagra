@@ -1,7 +1,19 @@
-[gd_scene load_steps=2 format=3 uid="uid://3guxcn7xhy7q"]
+[gd_scene load_steps=3 format=3 uid="uid://3guxcn7xhy7q"]
 
 [ext_resource type="PackedScene" uid="uid://cwrf108aiftk3" path="res://player.tscn" id="1_sxnfj"]
+[ext_resource type="Script" path="res://ProgressBar.gd" id="2_kutnq"]
 
 [node name="world" type="Node2D"]
 
-[node name="CharacterBody2D" parent="." instance=ExtResource("1_sxnfj")]
+[node name="Player" parent="." instance=ExtResource("1_sxnfj")]
+position = Vector2(638, 355)
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="ProgressBar" type="ProgressBar" parent="CanvasLayer"]
+offset_left = 3.0
+offset_top = 4.0
+offset_right = 201.0
+offset_bottom = 36.0
+value = 100.0
+script = ExtResource("2_kutnq")

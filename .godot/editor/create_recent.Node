@@ -1,4 +1,10 @@
-CollisionShape2D
+AnimationPlayer
 Sprite2D
+AnimatedSprite2D
+AnimationTree
+Timer
+ProgressBar
+CanvasLayer
+CollisionShape2D
 Node2D
 CharacterBody2D

@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://da5y551uoic6v"]
+
+[ext_resource type="Texture2D" uid="uid://dm7hk2o6o268b" path="res://playerblock64.png" id="1_c4kxy"]
+
+[node name="player_block" type="Sprite2D"]
+rotation = -1.5708
+scale = Vector2(2.5, 2.399)
+texture = ExtResource("1_c4kxy")
